@@ -1,0 +1,73 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK_17' // Replace with your configured JDK
+        maven '3.9.9' // Replace with your configured Maven version
+    }
+
+    environment {
+        AWS_REGION = 'ap-south-1' // Set your AWS region
+        ECR_REPO = 'dev/ted-search' // Replace with your ECR repository name
+        IMAGE_TAG = "${env.BUILD_NUMBER}" // Use Jenkins build number as image tag
+        AWS_ACCOUNT_ID = '713881821143' // Replace with your AWS Account ID
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/misgav777/ted_search-.git'
+            }
+        }
+
+        stage('Build and Test') {
+            steps {
+                dir('app') { // Navigate to the app directory where pom.xml is located
+                    sh 'mvn clean install'
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def imageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
+                    dir('app') { // Navigate to the app directory where Dockerfile is located
+                        sh """
+                            # Build the Docker image
+                            docker build -t ${imageName} .
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    def imageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
+                    sh """
+                        # Authenticate to AWS ECR
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                        
+                        # Push the Docker image to ECR
+                        docker push ${imageName}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Build and deployment completed successfully!"
+        }
+        failure {
+            echo "Build or deployment failed!"
+        }
+        always {
+            cleanWs() // Clean up workspace
+        }
+    }
+}
