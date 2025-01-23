@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  memcached:
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+    networks:
+      - ted_network
+    healthcheck:
+      test: ["CMD", "echo", "stats", "|", "nc", "localhost", "11211"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      memcached:
+        condition: service_healthy
+    networks:
+      - ted_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=production  # Ensure correct profile is set for production environment
+
+  proxy:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro    
+    depends_on:
+      - app
+    networks:
+      - ted_network
+
+networks:
+  ted_network:
+    driver: bridge

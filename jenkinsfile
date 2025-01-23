@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK_17' // Replace with your configured JDK
-        maven '3.9.9' // Replace with your configured Maven version
+        jdk 'JDK_17' 
+        maven '3.9.9' 
     }
 
     environment {
-        AWS_REGION = 'ap-south-1' // Set your AWS region
-        ECR_REPO = 'dev/ted-search' // Replace with your ECR repository name
-        IMAGE_TAG = "${env.BUILD_NUMBER}" // Use Jenkins build number as image tag
-        AWS_ACCOUNT_ID = '713881821143' // Replace with your AWS Account ID
+        AWS_REGION = 'ap-south-1' 
+        ECR_REPO = 'dev/ted-search' 
+        IMAGE_TAG = "${env.BUILD_NUMBER}" 
+        AWS_ACCOUNT_ID = '713881821143' 
     }
 
     stages {
@@ -53,6 +53,36 @@ pipeline {
                         
                         # Push the Docker image to ECR
                         docker push ${imageName}
+                    """
+                }
+            }
+        }
+
+        stage('Run E2E Tests') {
+            steps {
+                script {
+                    def containerName = "app-container-${IMAGE_TAG}"
+                    def imageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
+                    
+                    // Start the Docker container
+                    sh """
+                        docker run -d --name ${containerName} -p ${APP_PORT}:${APP_PORT} ${imageName}
+                    """
+                    
+                    // Wait for the application to start
+                    sh "sleep 15"
+                    
+                    // Perform a basic `curl` test to ensure the app is running
+                    sh """
+                        curl -f http://localhost:${APP_PORT} || (echo 'App failed health check!' && exit 1)
+                    """
+                    
+                    // Add more E2E tests if needed
+                    
+                    // Stop and remove the container
+                    sh """
+                        docker stop ${containerName}
+                        docker rm ${containerName}
                     """
                 }
             }
