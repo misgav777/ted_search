@@ -65,14 +65,15 @@ pipeline {
                         try {
                             // Start services using Docker Compose
                             sh """
-                                docker compose up -d
+                                docker compose up -d --build
                                 sleep 20
                             """
                             
                             // Run curl test to ensure the app is working
                             sh """
-                                curl -f http://localhost || (echo 'App failed health check!' && exit 1)
-                            """
+                                chmod +x e2e.sh
+                                ./e2e.sh
+                             """
 
                             // Add other E2E test commands here if needed
                             
