@@ -14,17 +14,20 @@ pipeline {
     }
 
     stages {
-        // stage('Checkout') {
-        //     steps {
-        //         git branch: 'main', url: 'https://github.com/misgav777/ted_search-.git'
-        //     }
-        // }
 
-        stage('Test The App') {
+        stage('Uinit Testing') {
             steps {
                 dir('app') { // Navigate to the app directory where pom.xml is located
                     sh 'mvn clean install'
                     sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Lint Testing') {
+            steps {
+                dir('app') {
+                    sh 'mvn checkstyle:check'
                 }
             }
         }
