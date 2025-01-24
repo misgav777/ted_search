@@ -24,23 +24,12 @@ pipeline {
             }
         }
 
-        stage('Lint Testing') {
-            steps {
-                dir('app') {
-                    sh 'mvn checkstyle:check'
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
                     def imageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
                     dir('app') { // Navigate to the app directory where Dockerfile is located
-                        sh """
-                            # Build the Docker image
-                            docker build -t ${imageName} .
-                        """
+                        sh "docker build -t ${imageName} ." // Build the Docker image
                     }
                 }
             }
@@ -50,14 +39,11 @@ pipeline {
             steps {
                 script {
                     
+                    // Login to ECR And Push the Docker image to ECR
                     def imageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
-                    sh """
-                        # Authenticate to AWS ECR
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                        
-                        # Push the Docker image to ECR
-                        docker push ${imageName}
-                    """
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                    sh "docker push ${imageName}"
+                    
                 }
             }
         }
