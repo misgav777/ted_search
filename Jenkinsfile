@@ -14,13 +14,13 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/misgav777/ted_search-.git'
-            }
-        }
+        // stage('Checkout') {
+        //     steps {
+        //         git branch: 'main', url: 'https://github.com/misgav777/ted_search-.git'
+        //     }
+        // }
 
-        stage('Build and Test') {
+        stage('Test The App') {
             steps {
                 dir('app') { // Navigate to the app directory where pom.xml is located
                     sh 'mvn clean install'
