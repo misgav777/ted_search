@@ -46,6 +46,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
+                    
                     def imageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
                     sh """
                         # Authenticate to AWS ECR
@@ -80,6 +81,7 @@ pipeline {
                         } finally {
                             // Clean up Docker Compose services
                             sh "docker compose down"
+                            sh "docker system prune -fa"
                         }
                     }
                 }
