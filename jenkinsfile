@@ -65,7 +65,7 @@ pipeline {
                         try {
                             // Start services using Docker Compose
                             sh """
-                                docker-compose up -d
+                                docker compose up -d
                                 sleep 20
                             """
                             
@@ -78,7 +78,7 @@ pipeline {
                             
                         } finally {
                             // Clean up Docker Compose services
-                            sh "docker-compose down"
+                            sh "docker compose down"
                         }
                     }
                 }
