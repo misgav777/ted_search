@@ -58,32 +58,29 @@ pipeline {
             }
         }
 
-        stage('Run E2E Tests') {
+        stage('Run E2E Tests with Docker Compose') {
             steps {
-                script {
-                    def containerName = "app-container-${IMAGE_TAG}"
-                    def imageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}"
-                    
-                    // Start the Docker container
-                    sh """
-                        docker run -d --name ${containerName} -p ${APP_PORT}:${APP_PORT} ${imageName}
-                    """
-                    
-                    // Wait for the application to start
-                    sh "sleep 15"
-                    
-                    // Perform a basic `curl` test to ensure the app is running
-                    sh """
-                        curl -f http://localhost:${APP_PORT} || (echo 'App failed health check!' && exit 1)
-                    """
-                    
-                    // Add more E2E tests if needed
-                    
-                    // Stop and remove the container
-                    sh """
-                        docker stop ${containerName}
-                        docker rm ${containerName}
-                    """
+                dir('app') {
+                    script {
+                        try {
+                            // Start services using Docker Compose
+                            sh """
+                                docker-compose up -d
+                                sleep 20
+                            """
+                            
+                            // Run curl test to ensure the app is working
+                            sh """
+                                curl -f http://localhost || (echo 'App failed health check!' && exit 1)
+                            """
+
+                            // Add other E2E test commands here if needed
+                            
+                        } finally {
+                            // Clean up Docker Compose services
+                            sh "docker-compose down"
+                        }
+                    }
                 }
             }
         }
