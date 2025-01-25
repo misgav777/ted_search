@@ -1,20 +1,36 @@
 pipeline{
     agent any
-    
+
     stages{
-        stage("A"){
+        stage("Initialize terraform"){
             steps{
-                echo "========executing A========"
+                dir("eks"){
+                    sh "terraform init"
+                }
             }
-            post{
-                always{
-                    echo "========always========"
+        }
+
+        stage("Validate terraform"){
+            steps{
+                dir("eks"){
+                    sh "terraform validate"
                 }
-                success{
-                    echo "========A executed successfully========"
+            }
+        }
+
+        stage("Plan terraform"){
+            steps{
+                dir("eks"){
+                    sh "terraform plan"
                 }
-                failure{
-                    echo "========A execution failed========"
+                input(massage: "Do you want to continue?", ok: "Proceed")
+            }
+        }
+
+        stage("Destroy/Apply EKS Cluster"){
+            steps{
+                dir("eks"){
+                    sh "terraform $action -auto-approve"
                 }
             }
         }
