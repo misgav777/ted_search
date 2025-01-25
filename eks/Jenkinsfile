@@ -23,7 +23,7 @@ pipeline{
                 dir("eks"){
                     sh "terraform plan"
                 }
-                input(massage: "Do you want to continue?", ok: "Proceed")
+                input(message: "Do you want to continue?", ok: "Proceed")
             }
         }
 
