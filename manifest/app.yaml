@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ted-search
+  labels:
+    app: ted-search
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ted-search
+  template:
+    metadata:
+      labels:
+        app: ted-search
+    spec:
+      containers:
+      - name: ted-search
+        image: 713881821143.dkr.ecr.ap-south-1.amazonaws.com/dev/ted-search:28
+        ports:
+        - containerPort: 9191
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ted-search
+spec:
+  ports:
+    - port: 80
+      targetPort: 9191
+  selector:
+    app: ted-search
+  type: ClusterIP
